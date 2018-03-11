@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">    
+<head>        
+<script src="../lib/d3.v3.min.js"></script>
+<style>
+.axis path,
+.axis line {
+fill: none;
+stroke: black;
+shape-rendering: crispEdges;
+}
+
+.axis text {
+font-family: sans-serif;
+font-size: 11px;
+}
+    .heading{
+        text-align: center;
+    }        
+</style>      
+</head>
+<h1 style="text-align:center">Water Usage Heatmap</h1>       
+<body>
+<script>    
+d3.csv("heatmap.csv",function(data){
+        var Zips=[]
+        data.forEach(function(d){
+        d.Year = +d.Year
+        d.Power = +d.Power
+        d.Month = +d.Month
+        if(Zips.indexOf(d["Zip Code"]) === -1){
+            Zips.push(d["Zip Code"])
+            }    
+        })
+    
+
+        
+        var select =d3.select("body").append("g").attr("x",1000).append("select").attr("class","select").on("change",draw)    
+        
+
+        
+        var options=select.selectAll("option").data(Zips).enter().append("option").text(function(data){return data})
+        
+        var svg=d3.selectAll("body").append("div","two").attr("align","center").append("svg").attr("width",800).attr("height",400)
+
+        var xscale=d3.scale.linear().domain(d3.extent(data,function(d){return d.Month})).range([100,600])        
+        var yscale=d3.scale.linear().domain(d3.extent(data,function(d){return d.Year})).range([300,0])
+        
+        var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+        var years=["2005","2006","2007","2008","2009","2010","2011","2012","2013"]
+        
+        var xaxis=d3.svg.axis().scale(xscale).orient("bottom").tickFormat(function(d,i){return months[i]})
+        var yaxis=d3.svg.axis().scale(yscale).orient("left").tickFormat(function(d,i){return years[i]})
+        
+        svg.append("g").attr("class", "axis").attr("transform", "translate(20,350)").call(xaxis).append("text").attr("x",675).attr("text-anchor","end").attr("font-weight","bold").text("Month")
+        
+        svg.append("g").attr("class", "axis").attr("transform", "translate(80,17.5)").call(yaxis).append("text").attr("y",-10).attr("text-anchor","end").attr("font-weight","bold").text("Year")
+            
+        
+        function draw(){
+            
+        var selectedZip=d3.select('select').property('value') 
+        var datasub =[]
+        data.forEach(function(d){if(d["Zip Code"] === selectedZip){datasub.push(d)}})        
+        
+        var cscale=d3.scale.linear().domain(d3.extent(datasub,function(d){return d.Power})).range(['#00ff00','#003b00'])     
+        
+        var legend = svg.selectAll(".legend").data(cscale.ticks(6).slice().reverse()).enter().append("g").attr("class", "legend")
+        .attr("transform", function(d, i) { return "translate(" + (675) + "," + (20 + i * 25) + ")"; });
+
+        legend.append("rect").attr("width", 20).attr("height", 20).style("fill", cscale);
+
+        legend.append("text").attr("x", 26).attr("y", 10).attr("dy", ".35em").text(function(d){return d})
+
+        svg.append("text").attr("class", "label").attr("x",675).attr("y", 10).attr("dy", ".35em").text("kWh")        
+        
+        var a=svg.selectAll("rect1").data(datasub)
+       
+        a.exit().remove()
+        
+        a.enter().append("rect").attr("x",function(d){return xscale(d.Month)}).attr("y",function(d){return yscale(d.Year)}).attr("width","40").attr("height","35").on('mouseover',function(d){console.log(d.Power)})
+        
+        a.style("fill",function(d){return cscale(d.Power)})
+        
+        
+        }
+        
+        draw().selectedZip('90077')
+        
+        
+    })
+    
+</script>
+</body>    
+</html>
