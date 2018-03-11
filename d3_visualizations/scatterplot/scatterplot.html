@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<head>        
+<script src="../lib/d3.v3.min.js"></script>
+    <style>
+            .axis path,
+            .axis line {
+            fill: none;
+            stroke: black;
+            shape-rendering: crispEdges;
+            }
+
+            .axis text {
+            font-family: sans-serif;
+            font-size: 11px;
+            }
+        
+        
+    </style>    
+</head> 
+<body>
+<script>
+    var svg=d3.selectAll("body").append("svg").attr("width","1500").attr("height","550")
+    var svg1=d3.selectAll("body").append("svg").attr("width","1500").attr("height","550")
+    
+    svg.append("text").text("Distribution vs Body Mass").attr("y",40).attr("x",150).style("font-weight","bold")
+    svg1.append("text").text("Distribution vs Body Mass(log-scaled)").attr("y",40).attr("x",150).style("font-weight","bold")
+    
+    d3.tsv("data.tsv",function(data){
+        
+            data.forEach(function(d){        
+            d.Distribution = +d.Distribution;
+            d.BodyMass = +d.BodyMass;    
+            })
+            
+            var legend = svg.selectAll(".legend").data(["Lagomorpha","Didelphimorphia","Dasyuromorphia"]).enter().append("g").attr("class", "legend").attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"})
+            
+             var legend1 = svg1.selectAll(".legend").data(["Lagomorpha","Didelphimorphia","Dasyuromorphia"]).enter().append("g").attr("class", "legend").attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"}); 
+            
+            legend.append("path").attr("d",d3.svg.symbol().type(function(d){if(d == "Lagomorpha"){return "circle"}else if(d == "Didelphimorphia"){return "square"}else{return "triangle-up"}})).style("stroke",function(d){if(d == "Lagomorpha"){return "red"}else if(d == "Didelphimorphia"){return "blue"}else{return "green"}})    
+            .style("fill","none").attr("transform","translate(1100,105)")
+            
+            legend1.append("path").attr("d",d3.svg.symbol().type(function(d){if(d == "Lagomorpha"){return "circle"}else if(d == "Didelphimorphia"){return "square"}else{return "triangle-up"}})).style("stroke",function(d){if(d == "Lagomorpha"){return "red"}else if(d == "Didelphimorphia"){return "blue"}else{return "green"}})    
+            .style("fill","none").attr("transform","translate(1100,105)")            
+        
+            legend.append("text").attr("x", 1120).attr("y", 105).attr("dy", ".35em").text(function(d) { return d;})
+            legend1.append("text").attr("x", 1120).attr("y", 105).attr("dy", ".35em").text(function(d) { return d;})
+        
+            var range_dist=d3.extent(data,function(d1){return d1.Distribution})
+            var range_BM=d3.extent(data,function(d2){return d2.BodyMass})
+            
+            var xscale= d3.scale.linear().domain(range_BM).range([50,950])
+            var yscale= d3.scale.linear().domain(range_dist).range([500,50])
+            
+            var xlog= d3.scale.log().domain(range_BM).range([50,950])
+            var ylog= d3.scale.log().domain(range_dist).range([500,50])
+            
+            var xaxis=d3.svg.axis().scale(xscale).orient("bottom").ticks(6)
+            var yaxis=d3.svg.axis().scale(yscale).orient("left").ticks(6)
+            
+            var xlscale=d3.svg.axis().scale(xlog).orient("bottom")
+            var ylscale=d3.svg.axis().scale(ylog).orient("left")
+            
+            var a=d3.svg.symbol().type("circle")
+            console.log(data)
+            
+            svg.selectAll("path").data(data).enter().append("path").attr("d",d3.svg.symbol().type(function(d){if(d.Species == "Lagomorpha"){return "circle"}else if(d.Species == "Didelphimorphia"){return "square"}else{return "triangle-up"}})).attr("transform",
+            function(d){ return "translate(" + xscale(d.BodyMass) + "," + yscale(d.Distribution) + ")" }).style("stroke",function(d){if(d.Species == "Lagomorpha"){return "red"}else if(d.Species == "Didelphimorphia"){return "blue"}else{return "green"}})    
+            .style("fill","none")
+            
+            svg.append("g").attr("class", "axis").attr("transform", "translate(0,500)").call(xaxis).append("text").attr("x",800).attr("y",-15).text("Body Mass").attr("font-size",30)
+            
+            svg.append("g").attr("class", "axis").attr("transform", "translate(50,0)").call(yaxis).append("text").attr("y",30).attr("x",-40).attr("text-anchor","end").text("Distribution").attr("transform","rotate(-90)")
+            
+            svg1.selectAll("path1").data(data).enter().append("path").attr("d",d3.svg.symbol().type(function(d){if(d.Species == "Lagomorpha"){return "circle"}else if(d.Species == "Didelphimorphia"){return "square"}else{return "triangle-up"}})).attr("transform",
+            function(d){ return "translate(" + xlog(d.BodyMass) + "," + ylog(d.Distribution) + ")" }).style("stroke",function(d){if(d.Species == "Lagomorpha"){return "red"}else if(d.Species == "Didelphimorphia"){return "blue"}else{return "green"}})    
+            .style("fill","none")
+            
+            svg1.append("g").attr("class", "axis").attr("transform", "translate(0,500)").call(xlscale).append("text").attr("x",800).attr("y",-15).text("Body Mass(log-scaled)").attr("font-size",30)
+            
+            svg1.append("g").attr("class", "axis").attr("transform", "translate(50,0)").call(ylscale).append("text").attr("y",30).attr("x",-75).attr("text-anchor","end").text("Distribution (log-scaled)").attr("transform","rotate(-90)")
+            
+            })
+    
+    </script>                                                                           
+</body>
+</html>

@@ -1,0 +1,2 @@
+I scaled exponentially based on the degree of the node. Scaling exponentially brings nodes with higher degrees into prominence.
+ The radius increases greatly for a small change in the degree and this is effective in highlighting important nodes.

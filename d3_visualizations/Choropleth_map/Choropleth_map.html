@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<head>
+<script src="../lib/d3.v3.min.js"></script>
+<script src="../lib/d3-queue.v3.min.js"></script>
+<script src="../lib/topojson.v1.min.js"></script>
+<script src="../lib/d3.tip.v0.6.3.js"></script>
+<style>
+    .tip{
+        line-height: 1;
+        width: 400px;
+        font-size: 12.5px;
+        padding: 5px;
+        background: rgba(0, 0, 0, 0.8);
+        color: #fff;
+        border-radius: 6px;
+        text-align: center;
+    }    
+</style>    
+</head>
+    <body>
+        <script>
+        var svg=d3.selectAll("body").append("svg").attr("width","1000").attr("height","800")    
+        
+        var path=d3.geo.path()
+        
+        var Q=d3.queue()
+        
+        Q.defer(d3.json,"median_earnings.json").
+        defer(d3.csv,"sat_scores.csv",function(d){
+            d.id=+d.id
+            d.sat_avg=+d.sat_avg
+            return d
+            }).
+        defer(d3.json,"us.json")
+        .await(callback)
+        
+        
+        
+        function callback(error,data,data2,us){
+        
+            
+            
+            var arr = d3.merge([data,data2])
+            var nest=d3.nest().key(function(d){return d.id}).map(arr)
+            
+            nest[1].forEach(function(d,i){if(i>=1){console.log(d['name'])}})
+            
+            var colorscale=d3.scale.linear().domain(d3.extent(data,function(d){return d.median_earnings})).range(['#00ff00','#003b00'])
+            
+            tip = d3.tip().attr('class', 'd3-tip').html(function(d){var a='';nest[d.id].forEach(function(d,i){
+                if(i>=1 && i<=5){a = a+d['name']+"\( SAT:"+d['sat_avg']+" \)"+"<br>"}})
+                return a}).attr("class","tip").direction('e').offset([30,-10])
+
+            svg.call(tip)
+        
+         svg
+        .selectAll("path")
+        .data(topojson.feature(us, us.objects.states).features)
+        .enter().append("path")
+        .style("stroke","black")
+        .attr("fill",function(d){return colorscale(nest[d.id][0]['median_earnings'])})
+        .attr("d", path)
+        .on('mouseover',tip.show)
+        .on('mouseout',tip.hide)
+         
+                 
+        var legend = svg.selectAll(".legend").data(colorscale.ticks(6).slice(1)).enter().append("g").attr("class", "legend")
+        .attr("transform", function(d, i) { return "translate(" + (900) + "," + (70 + i * 25) + ")"; });
+
+        legend.append("rect").attr("width", 20).attr("height", 20).style("fill", colorscale);
+
+        legend.append("text").attr("x", 26).attr("y", 10).attr("dy", ".35em").text(function(d){return "$"+d})
+
+        svg.append("text").attr("class", "label").attr("x",675).attr("y", 10).attr("dy", ".35em").text("Median Earnings by state").style("font-weight","bold")
+            
+            
+        }
+            
+
+        </script>
+    </body>
+</html>    
